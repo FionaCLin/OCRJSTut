@@ -22,11 +22,19 @@ app.get('/', (req, res) => {
   res.render('index');
 });
 app.post('/upload', (req, res) => {
-  upload(req, res, (err) => {
-    fs.readFile(`./uploads/${req.file.originalname}`, (err, res) => {
-      if (err) return console.log('this is your error', err);
-      worker.recognize();
-    });
+  upload(req, res, async (err) => {
+    let temp = `./uploads/${req.file.originalname}`;
+    // fs.readFile(`./uploads/${req.file.originalname}`, (err, res) => {
+    await worker.load();
+    await worker.loadLanguage('eng');
+    await worker.initialize('eng');
+    const {
+      data: { text },
+    } = await worker.recognize(temp);
+    console.log(text, '####');
+    fs.unlinkSync(temp);
+    res.send(text);
+    await worker.terminate();
   });
 });
 const POST = 5000 | process.env.PORT;
